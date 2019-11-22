@@ -22,24 +22,24 @@ def calc_epr_spectral(file):
 
         s = np.zeros(nSim)
         nt, nx = d['data']['trajs'][0, 0, t_epr, :].shape
-        rhos = np.zeros((nSim, nt - (nt + 1) % 2, nx - (nx + 1) % 2))
+        epf = np.zeros((nSim, nt - (nt + 1) % 2, nx - (nx + 1) % 2))
 
         for ind, traj in enumerate(d['data']['trajs'][..., t_epr, :]):
-            s[ind], rhos[ind], w = fen.entropy(traj, sample_spacing=[dt, dx],
-                                               window='boxcar', detrend='constant',
-                                               smooth_corr=True, nfft=None,
-                                               sigma=sigma,
-                                               subtract_bias=True,
-                                               many_traj=False,
-                                               return_density=True)
+            s[ind], epf[ind], w = fen.entropy(traj, sample_spacing=[dt, dx],
+                                              window='boxcar', detrend='constant',
+                                              smooth_corr=True, nfft=None,
+                                              sigma=sigma,
+                                              subtract_bias=True,
+                                              many_traj=False,
+                                              return_density=True)
 
         if '/data/s' in d:
             del d['data']['s']
         d['data'].create_dataset('s', data=s)
 
-        if '/data/rhos' in d:
-            del d['data']['rhos']
-        d['data'].create_dataset('rhos', data=rhos)
+        if '/data/epf' in d:
+            del d['data']['epf']
+        d['data'].create_dataset('epf', data=epf)
 
         if '/data/omega' in d:
             del d['data']['omega']
@@ -53,7 +53,7 @@ def calc_epr_spectral(file):
             del d['params']['sigma']
         d['params'].create_dataset('sigma', data=sigma)
 
-    return s, rhos, w
+    return s, epf, w
 
 
 if sys.platform == 'darwin':
