@@ -61,9 +61,9 @@ def entropy(data, sample_spacing, window='boxcar', nperseg=None,
         done. Defaults to 'constant'.
     smooth_corr : bool, optional
         option to smooth the correlation function or not
-    sigma : int, optional
+    sigma : float, optional
         if smooth_corr, standard deviation of gaussian kernel used to
-        smooth corelation matrix
+        smooth corelation matrix in each axis dimension in physical units
     subtract_bias : bool, optional
         option to subtract systematic bias from entropy estimate or not.
         Bias given by N(N-1) / (2 sqrt(pi)) * omega_max / (J * T_max * sigma)
@@ -160,39 +160,37 @@ def entropy(data, sample_spacing, window='boxcar', nperseg=None,
         raise ValueError('sigma is either a single value for all dimensions\n'
                          'or has as many elements as the number of dimensions of the data')
 
-    # smooth c if wanted
+    # smooth c if wanted. Divide by frequency spacing to get in units of the array spacing
     if smooth_corr:
-        c = _nd_gauss_smooth(c, sigma)
+        c = _nd_gauss_smooth(c, sigma / dk)
 
     # get inverse of each NxN submatrix of c.
     # Broadcasts to find inverse of square matrix in last two dimensions of matrix
     c_inv = np.linalg.inv(c)
 
-    # # transpose last two indices
+    # transpose last two indices
     axes = list(range(c.ndim))
     axes[-2:] = [axes[-1], axes[-2]]
-    # c_inv = np.transpose(c_inv, axes=axes)
 
-    # first axis is temporal frequency, flip along that axis to get C^-T(k, -w)
+    # first axis is temporal frequency, flip along that axis to get C^-1(k, -w)
     # Also sum over last two axes to sum over matrix indices, leaving only frequency
     # indices for integration
-    sdensity = (np.log(np.linalg.det(np.flip(c, axis=0)) / np.linalg.det(c)) +
-                np.sum((np.flip(c_inv, axis=0) - c_inv) * np.transpose(c, axes=axes),
-                       axis=(-1, -2))) / (2 * TL.prod())
+    epf = (np.log(np.linalg.det(np.flip(c, axis=0)) / np.linalg.det(c)) +
+           np.sum((np.flip(c_inv, axis=0) - c_inv) * np.transpose(c, axes=axes), axis=(-1, -2))) / (2 * TL.prod())
 
-    s = np.sum(sdensity)
+    s = np.sum(epf)
 
     # Calculate and subtract off bias if wanted
     if subtract_bias:
         bias = ((1 / nrep) * ((nvar * (nvar - 1) / 2) + (3 * nvar / 8)) *
-                np.prod([((freqs[n].max() / sigma[n]) / (TL[n] * dk[n] * (np.pi)**0.5)) for n in range(len(TL))]))
+                np.prod([((freqs[n].max()) / (TL[n] * sigma[n] * (np.pi)**0.5)) for n in range(len(TL))]))
         # print(s)
         # print(bias)
         s -= bias
         # print(s)
 
     if return_density:
-        return s.real, sdensity.real, freqs
+        return s.real, epf.real, freqs
     else:
         return s.real
 
