@@ -59,9 +59,9 @@ def entropy(data, sample_spacing, window='boxcar', nperseg=None,
         `boundary` is not `None`, and `padded` is `True`.
     smooth_corr : bool, optional
         option to smooth the correlation function or not
-    sigma : int, optional
+    sigma : float, optional
         if smooth_corr, standard deviation of gaussian kernel used to
-        smooth corelation matrix
+        smooth corelation matrix in Hz
     subtract_bias : bool, optional
         option to subtract systematic bias from entropy estimate or not.
         Bias given by N(N-1) / (2 sqrt(pi)) * omega_max / (J * T_max * sigma)
@@ -73,42 +73,42 @@ def entropy(data, sample_spacing, window='boxcar', nperseg=None,
     -------
     s : float
         entropy production rate
-    s_density : numpy array (optional)
-        numpy array containing entropy production rate density. s_density.sum() = s.
+    epf : numpy array (optional)
+        numpy array containing entropy production rate density. epf.sum() = s.
         Only returned if return_density=True
     freqs : numpy array (optional)
-        frequency bins of s_density. Only returned if return_density=True
+        frequency bins of epf. Only returned if return_density=True
     '''
 
     if data.ndim == 3:
         # print('Assuming data dimensions are nreplicates, nvariables, ntPoints.\n',
         #       'If not, you are about to get nonsense.')
         nrep, nvar, nt = data.shape  # number of replicates, number of variables, number of time points
-        c_fft_all = np.zeros((nrep, nt, nvar, nvar), dtype=complex)
+        c_all = np.zeros((nrep, nt, nvar, nvar), dtype=complex)
         for ii in range(nrep):
-            c_fft_all[ii, ...], omega = corr_matrix(data[ii, ...],
-                                                    sample_spacing,
-                                                    window,
-                                                    nperseg,
-                                                    noverlap,
-                                                    nfft,
-                                                    detrend,
-                                                    padded,
-                                                    return_fft=True)
-        c_fft = c_fft_all.mean(axis=0)
+            c_all[ii, ...], omega = corr_matrix(data[ii, ...],
+                                                sample_spacing,
+                                                window,
+                                                nperseg,
+                                                noverlap,
+                                                nfft,
+                                                detrend,
+                                                padded,
+                                                return_fft=True)
+        c = c_all.mean(axis=0)
 
     elif data.ndim == 2:
         nrep = 1
         nvar, nt = data.shape
-        c_fft, omega = corr_matrix(data,
-                                   sample_spacing,
-                                   window,
-                                   nperseg,
-                                   noverlap,
-                                   nfft,
-                                   detrend,
-                                   padded,
-                                   return_fft=True)
+        c, omega = corr_matrix(data,
+                               sample_spacing,
+                               window,
+                               nperseg,
+                               noverlap,
+                               nfft,
+                               detrend,
+                               padded,
+                               return_fft=True)
     elif data.ndim not in [2, 3]:
         raise ValueError('Number of dimensions of data needs to be 2 or 3. \n',
                          'Currently is {0}'.format(data.ndim))
@@ -119,29 +119,27 @@ def entropy(data, sample_spacing, window='boxcar', nperseg=None,
     T = sample_spacing * nfft  # find total time of simulation
     dw = 2 * np.pi / T  # find spacing of fourier frequencies
 
-    # smooth c_fft if wanted
+    # smooth c if wanted. Divide by frequency spacing to get in units of the array spacing
     if smooth_corr:
-        c_fft = _gauss_smooth(c_fft, sigma)
+        c = _gauss_smooth(c, sigma / dw)
 
-    # get inverse of each NxN submatrix of c_fft. Broadcasts to find inverse of square
+    # get inverse of each NxN submatrix of c. Broadcasts to find inverse of square
     # matrix in last two dimensions of matrix
-    c_fft_inv = np.linalg.inv(c_fft)
-    sdensity = (np.log(np.linalg.det(np.transpose(c_fft, (0, 2, 1))) / np.linalg.det(c_fft)) +
-                np.sum((np.transpose(c_fft_inv, (0, 2, 1)) - c_fft_inv) * np.transpose(c_fft, (0, 2, 1)), axis=(-1, -2))) / (2 * T)
+    c_inv = np.linalg.inv(c)
+    epf = (np.log(np.linalg.det(np.transpose(c, (0, 2, 1))) / np.linalg.det(c)) +
+           np.sum((np.transpose(c_inv, (0, 2, 1)) - c_inv) * np.transpose(c, (0, 2, 1)), axis=(-1, -2))) / (2 * T)
 
-    # return omega, sdensity
-    s = np.sum(sdensity)
-
-    # s /= (2 * T)n
+    # return omega, epf
+    s = np.sum(epf)
 
     # Calculate and subtract off bias if wanted
     if subtract_bias and smooth_corr:
-        bias = (np.pi**-0.5) * (nvar * (nvar - 1) / 2) * (omega.max() / (nrep * T * sigma * dw))
+        bias = (np.pi**-0.5) * (nvar * (nvar - 1) / 2) * (omega.max() / (nrep * T * sigma))
         # print(bias)
         s -= bias
 
     if return_density:
-        return s.real, sdensity.real, omega
+        return s.real, epf.real, omega
     else:
         return s.real
 
