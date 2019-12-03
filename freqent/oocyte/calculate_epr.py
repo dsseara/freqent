@@ -57,11 +57,11 @@ def calc_epr_spectral(file):
 
 
 if sys.platform == 'darwin':
-    dataFolder = '/Volumes/Storage/Danny/brusselatorSims/fieldSims/191028'
+    datapath = '/Users/Danny/Dropbox/Excitable wounds for Mike and Ian/'
 if sys.platform == 'linux':
-    dataFolder = '/mnt/llmStorage203/Danny/brusselatorSims/fieldSims/191028'
+    datapath = '/media/daniel/storage11/Dropbox/Excitable wounds for Mike and Ian/'
 
-files = glob(os.path.join(dataFolder, 'alpha*', 'data.hdf5'))
+files = glob(os.path.join(datapath, 'alpha*', 'data.hdf5'))
 sigma = [75, 5]
 
 print('Calculating eprs...')
