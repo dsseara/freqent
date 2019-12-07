@@ -16,7 +16,7 @@ if sys.platform == 'linux':
 params = pd.read_excel(os.path.join(datapath, '_params.xlsx'))
 expts = sorted(list(set([expt[:-3] for expt in params['experiment']])))
 
-for expt in expts[:4]:
+for expt in expts:
     print(expt)
     files = glob(os.path.join(datapath, expt + '*'))
     if len(files) is not 2:

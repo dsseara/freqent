@@ -13,25 +13,22 @@ def calc_epr_spectral(file):
     '''
     print('Reading {f}'.format(f=file.split(os.path.sep)[-2]))
     with h5py.File(file) as d:
-        t_points = d['data']['t_points'][:]
-        t_epr = np.where(t_points > 10)[0]
-        dt = np.diff(t_points)[0]
-        dx = d['params']['lCompartment'][()]
-        # nCompartments = d['params']['nCompartments'][()]
-        nSim = d['params']['nSim'][()]
+        if d['images']['actin'].attrs['woundBool'] == wounds:
+            print('has wound, skipping...')
+            continue
 
-        s = np.zeros(nSim)
-        nt, nx = d['data']['trajs'][0, 0, t_epr, :].shape
-        epf = np.zeros((nSim, nt - (nt + 1) % 2, nx - (nx + 1) % 2))
+        dt = d['images']['actin'].attrs['dt']
+        dx = d['images']['actin'].attrs['dx']
 
-        for ind, traj in enumerate(d['data']['trajs'][..., t_epr, :]):
-            s[ind], epf[ind], w = fen.entropy(traj, sample_spacing=[dt, dx],
-                                              window='boxcar', detrend='constant',
-                                              smooth_corr=True, nfft=None,
-                                              sigma=sigma,
-                                              subtract_bias=True,
-                                              many_traj=False,
-                                              return_density=True)
+        traj = np.con
+
+        s, epf, w = fen.entropy(traj, sample_spacing=[dt, dx, dx],
+                                      window='boxcar', detrend='constant',
+                                      smooth_corr=True, nfft=None,
+                                      sigma=sigma,
+                                      subtract_bias=True,
+                                      many_traj=False,
+                                      return_density=True)
 
         if '/data/s' in d:
             del d['data']['s']
@@ -57,12 +54,13 @@ def calc_epr_spectral(file):
 
 
 if sys.platform == 'darwin':
-    datapath = '/Users/Danny/Dropbox/Excitable wounds for Mike and Ian/'
+    datapath = '/Volumes/Storage/Danny/oocyte/'
 if sys.platform == 'linux':
-    datapath = '/media/daniel/storage11/Dropbox/Excitable wounds for Mike and Ian/'
+    datapath = '/mnt/llmStorage203/Danny/oocyte/'
 
 files = glob(os.path.join(datapath, 'alpha*', 'data.hdf5'))
-sigma = [75, 5]
+sigma = [1, 1, 1]
+wounds = 0
 
 print('Calculating eprs...')
 with multiprocessing.Pool(processes=4) as pool:
