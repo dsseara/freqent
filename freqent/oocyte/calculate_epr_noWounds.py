@@ -11,24 +11,25 @@ def calc_epr_spectral(file):
     '''
     function to pass to multiprocessing pool to calculate epr in parallel
     '''
-    print('Reading {f}'.format(f=file.split(os.path.sep)[-2]))
+    print('Reading {f}'.format(f=file.split(os.path.sep)[-1]))
     with h5py.File(file) as d:
-        if d['images']['actin'].attrs['woundBool'] == wounds:
-            print('has wound, skipping...')
-            continue
-
         dt = d['images']['actin'].attrs['dt']
         dx = d['images']['actin'].attrs['dx']
-
-        traj = np.con
-
+        traj = np.stack([d['images']['actin'][:-1], d['images']['rho'][:-1]])
+        c, w = fen.corr_matrix(traj, sample_spacing=[dt, dx, dx],
+                               window='boxcar', detrend='constant')
+        c_azi_avg, w_azi_avg = fen.corr_matrix(traj, sample_spacing=[dt, dx, dx],
+                                               window='boxcar', detrend='constant',
+                                               azimuthal_average=True)
         s, epf, w = fen.entropy(traj, sample_spacing=[dt, dx, dx],
-                                      window='boxcar', detrend='constant',
-                                      smooth_corr=True, nfft=None,
-                                      sigma=sigma,
-                                      subtract_bias=True,
-                                      many_traj=False,
-                                      return_density=True)
+                                window='boxcar', detrend='constant',
+                                smooth_corr=True, nfft=None,
+                                sigma=sigma,
+                                subtract_bias=True,
+                                many_traj=False,
+                                return_density=True)
+        dw, dkx, dky = [np.diff(k)[0] for k in w]
+        epf_azi_avg, kr = fen._azimuthal_average_3D(epf, tdim=0, dx=dkx)
 
         if '/data/s' in d:
             del d['data']['s']
@@ -58,7 +59,20 @@ if sys.platform == 'darwin':
 if sys.platform == 'linux':
     datapath = '/mnt/llmStorage203/Danny/oocyte/'
 
-files = glob(os.path.join(datapath, 'alpha*', 'data.hdf5'))
+expts = ['140706_08',
+         '140706_09',
+         '140713_08',
+         '140713_09',
+         '140717_01',
+         '140717_13',
+         '140817_05',
+         '160403_09',
+         '160403_14',
+         '160915_09',
+         '161001_04',
+         '161025_01',
+         '171230_04']
+files = [os.path.join(datapath, expt) for expt in expts]
 sigma = [1, 1, 1]
 wounds = 0
 
