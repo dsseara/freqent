@@ -12,15 +12,35 @@ def calc_epr_spectral(file):
     function to pass to multiprocessing pool to calculate epr in parallel
     '''
     print('Reading {f}'.format(f=file.split(os.path.sep)[-1]))
+
     with h5py.File(file) as d:
         dt = d['images']['actin'].attrs['dt']
         dx = d['images']['actin'].attrs['dx']
+
         traj = np.stack([d['images']['actin'][:-1], d['images']['rho'][:-1]])
+
+        # calculate dynamic structure factor and it's azimuthal average
         c, w = fen.corr_matrix(traj, sample_spacing=[dt, dx, dx],
                                window='boxcar', detrend='constant')
+
         c_azi_avg, w_azi_avg = fen.corr_matrix(traj, sample_spacing=[dt, dx, dx],
                                                window='boxcar', detrend='constant',
                                                azimuthal_average=True)
+
+        if '/dsf' in d:
+            del d['dsf']
+        dsf_group = d.create_group('dsf')
+        dsf_group.attrs['description'] = 'dynamic structure factor calculations for images'
+        dsf_group.create_dataset('c', data=c)
+        dsf_group.create_dataset('omega', data=w[0])
+        dsf_group.create_dataset('k_x', data=w[1])
+        dsf_group.create_dataset('k_y', data=w[2])
+        dsf_group.create_dataset('c_azi_avg', data=c_azi_avg)
+        dsf_group.create_dataset('k_r', data=w_azi_avg[1])
+
+        del c, w, c_azi_avg, w_azi_avg
+
+        # calculate entropy, and epf and epf's azimuthal average
         s, epf, w = fen.entropy(traj, sample_spacing=[dt, dx, dx],
                                 window='boxcar', detrend='constant',
                                 smooth_corr=True, nfft=None,
@@ -28,28 +48,28 @@ def calc_epr_spectral(file):
                                 subtract_bias=True,
                                 many_traj=False,
                                 return_density=True)
+
         dw, dkx, dky = [np.diff(k)[0] for k in w]
-        epf_azi_avg, kr = fen._azimuthal_average_3D(epf, tdim=0, dx=dkx)
 
-        if '/data/s' in d:
-            del d['data']['s']
-        d['data'].create_dataset('s', data=s)
+        epf_azi_avg, kr = fen._azimuthal_average_3D(epf, tdim=0,
+                                                    center=None,
+                                                    binsize=1,
+                                                    mask='circle',
+                                                    weight=None,
+                                                    dx=dkx)
 
-        if '/data/epf' in d:
-            del d['data']['epf']
-        d['data'].create_dataset('epf', data=epf)
-
-        if '/data/omega' in d:
-            del d['data']['omega']
-        d['data'].create_dataset('omega', data=w[0])
-
-        if '/data/k' in d:
-            del d['data']['k']
-        d['data'].create_dataset('k', data=w[1])
-
-        if '/params/sigma/' in d:
-            del d['params']['sigma']
-        d['params'].create_dataset('sigma', data=sigma)
+        if '/entropy' in d:
+            del d['entropy']
+        entropy_group = d.create_group('entropy')
+        entropy_group.attrs['sigma'] = sigma
+        entropy_group.attrs['description'] = 'entropy calculations for images'
+        entropy_group.create_dataset('s', data=s)
+        entropy_group.create_dataset('epf', data=epf)
+        entropy_group.create_dataset('epf_azi_avg', data=epf_azi_avg)
+        entropy_group.create_dataset('omega', data=w[0])
+        entropy_group.create_dataset('k_x', data=w[1])
+        entropy_group.create_dataset('k_y', data=w[2])
+        entropy_group.create_dataset('k_r', data=kr)
 
     return s, epf, w
 
@@ -59,6 +79,8 @@ if sys.platform == 'darwin':
 if sys.platform == 'linux':
     datapath = '/mnt/llmStorage203/Danny/oocyte/'
 
+# these are the list of experiments that don't have any underlying problems
+# in the images
 expts = ['140706_08',
          '140706_09',
          '140713_08',
@@ -72,11 +94,11 @@ expts = ['140706_08',
          '161001_04',
          '161025_01',
          '171230_04']
-files = [os.path.join(datapath, expt) for expt in expts]
-sigma = [1, 1, 1]
+files = [os.path.join(datapath, expt + '.hdf5') for expt in expts]
+sigma = [0.01, 0.1, 0.1]
 wounds = 0
 
 print('Calculating eprs...')
-with multiprocessing.Pool(processes=4) as pool:
+with multiprocessing.Pool(processes=2) as pool:
     result = pool.map(calc_epr_spectral, files)
 print('Done.')
