@@ -6,7 +6,7 @@ import os
 from datetime import datetime
 import argparse
 
-plt.close('all')
+# plt.close('all')
 mpl.rcParams['pdf.fonttype'] = 42
 mpl.rcParams['font.size'] = 14
 mpl.rcParams['axes.linewidth'] = 2
@@ -39,8 +39,11 @@ labels = ['actin', 'rho']
 # ax.pcolormesh(kr, w[w > 0], (epf_aziavg / epf_aziavg.sum(axis=0))[w > 0],
 #               rasterized=True, norm=mpl.colors.LogNorm())
 for axInd, ax in enumerate(axs):
+    # a = ax.pcolormesh(kr, w[w > 0],
+    #                   (c_aziavg / c_aziavg.sum(axis=0))[w > 0, :, axInd, axInd].real,
+    #                   rasterized=True, norm=mpl.colors.LogNorm(), cmap='viridis')
     a = ax.pcolormesh(kr, w[w > 0],
-                      (c_aziavg / c_aziavg.sum(axis=0))[w > 0, :, axInd, axInd].real,
+                      c_aziavg[w > 0, :, axInd, axInd].real,
                       rasterized=True, norm=mpl.colors.LogNorm(), cmap='viridis')
     ax.set(xlabel=r'$q_r \ [2 \pi / \mu m]$', ylabel=r'$\omega \ [2 \pi / s]$',
            title=file + ', ' + labels[axInd])
