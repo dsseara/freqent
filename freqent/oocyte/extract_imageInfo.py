@@ -5,13 +5,28 @@ import h5py
 import os
 from glob import glob
 import sys
+import argparse
 
-if sys.platform == 'darwin':
-    datapath = '/Users/Danny/Dropbox/Excitable wounds for Mike and Ian/'
-    savepath = '/Volumes/Storage/Danny/oocyte'
-if sys.platform == 'linux':
-    datapath = '/media/daniel/storage11/Dropbox/Excitable wounds for Mike and Ian/'
-    savepath = '/mnt/llmStorage203/Danny/oocyte'
+parser = argparse.ArgumentParser()
+parser.add_argument('--datapath', '-d', type=str,
+                    help='path to oocyte image files')
+parser.add_argument('--savepath', '-s', type=str, default=None,
+                    help='path to output hdf5 files')
+
+args = parser.parse_args()
+
+datapath = args.datapath
+if args.savepath is None:
+    savepath = datapath
+else:
+    savepath = args.savepath
+
+# if sys.platform == 'darwin':
+#     datapath = '/Users/Danny/Dropbox/Excitable wounds for Mike and Ian/'
+#     savepath = '/Volumes/Storage/Danny/oocyte'
+# if sys.platform == 'linux':
+#     datapath = '/media/daniel/storage11/Dropbox/Excitable wounds for Mike and Ian/'
+#     savepath = '/mnt/llmStorage203/Danny/oocyte'
 
 params = pd.read_excel(os.path.join(datapath, '_params.xlsx'))
 expts = sorted(list(set([expt[:-3] for expt in params['experiment']])))
