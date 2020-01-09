@@ -20,12 +20,19 @@ mpl.rcParams['ytick.minor.width'] = 2
 mpl.rcParams['xtick.direction'] = 'in'
 mpl.rcParams['ytick.direction'] = 'in'
 
-if sys.platform == 'linux':
-    datapath = '/mnt/llmStorage203/Danny/oocyte/'
-    savepath = '/media/daniel/storage11/Dropbox/LLM_Danny/oocyte'
-if sys.platform == 'darwin':
-    datapath = '/Volumes/Storage/Danny/oocyte/'
-    savepath = '/Users/Danny/Dropbox/LLM_Danny/oocyte'
+parser = argparse.ArgumentParser()
+parser.add_argument('--datapath', '-d', type=str,
+                    help='path to oocyte image files')
+parser.add_argument('--savepath', '-s', type=str, default=None,
+                    help='path to output hdf5 files')
+
+args = parser.parse_args()
+
+datapath = args.datapath
+if args.savepath is None:
+    savepath = datapath
+else:
+    savepath = args.savepath
 
 files = glob(os.path.join(datapath, '*.hdf5'))
 epr = []

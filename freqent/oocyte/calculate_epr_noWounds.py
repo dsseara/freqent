@@ -5,6 +5,7 @@ import numpy as np
 import h5py
 import freqent.freqentn as fen
 import multiprocessing
+import argparse
 
 
 def calc_epr_spectral(file):
@@ -21,16 +22,17 @@ def calc_epr_spectral(file):
 
         # calculate dynamic structure factor and it's azimuthal average
         c, w = fen.corr_matrix(traj, sample_spacing=[dt, dx, dx],
-                               window='boxcar', detrend='constant')
+                               window=window, detrend='constant')
 
         c_azi_avg, w_azi_avg = fen.corr_matrix(traj, sample_spacing=[dt, dx, dx],
-                                               window='boxcar', detrend='constant',
+                                               window=window, detrend='constant',
                                                azimuthal_average=True)
 
         if '/dsf' in d:
             del d['dsf']
         dsf_group = d.create_group('dsf')
         dsf_group.attrs['description'] = 'dynamic structure factor calculations for images'
+        dsf_group.attrs['window'] = window
         dsf_group.create_dataset('c', data=c)
         dsf_group.create_dataset('omega', data=w[0])
         dsf_group.create_dataset('k_x', data=w[1])
@@ -42,7 +44,7 @@ def calc_epr_spectral(file):
 
         # calculate entropy, and epf and epf's azimuthal average
         s, epf, w = fen.entropy(traj, sample_spacing=[dt, dx, dx],
-                                window='boxcar', detrend='constant',
+                                window=window, detrend='constant',
                                 smooth_corr=True, nfft=None,
                                 sigma=sigma,
                                 subtract_bias=True,
@@ -63,6 +65,7 @@ def calc_epr_spectral(file):
         entropy_group = d.create_group('entropy')
         entropy_group.attrs['sigma'] = sigma
         entropy_group.attrs['description'] = 'entropy calculations for images'
+        entropy_group.attrs['window'] = window
         entropy_group.create_dataset('s', data=s)
         entropy_group.create_dataset('epf', data=epf)
         entropy_group.create_dataset('epf_azi_avg', data=epf_azi_avg)
@@ -74,10 +77,11 @@ def calc_epr_spectral(file):
     return s, epf, w
 
 
-if sys.platform == 'darwin':
-    datapath = '/Volumes/Storage/Danny/oocyte/'
-if sys.platform == 'linux':
-    datapath = '/mnt/llmStorage203/Danny/oocyte/'
+parser = argparse.ArgumentParser()
+parser.add_argument('--datapath', '-d', type=str,
+                    help='full path to data')
+args = parser.parse_args()
+datapath = args.datapath
 
 # these are the list of experiments that don't have any underlying problems
 # in the images
@@ -96,7 +100,7 @@ expts = ['140706_08',
          '171230_04']
 files = [os.path.join(datapath, expt + '.hdf5') for expt in expts]
 sigma = [0.01, 0.1, 0.1]
-wounds = 0
+window = 'hann'
 
 print('Calculating eprs...')
 with multiprocessing.Pool(processes=2) as pool:

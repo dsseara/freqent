@@ -21,17 +21,12 @@ if args.savepath is None:
 else:
     savepath = args.savepath
 
-# if sys.platform == 'darwin':
-#     datapath = '/Users/Danny/Dropbox/Excitable wounds for Mike and Ian/'
-#     savepath = '/Volumes/Storage/Danny/oocyte'
-# if sys.platform == 'linux':
-#     datapath = '/media/daniel/storage11/Dropbox/Excitable wounds for Mike and Ian/'
-#     savepath = '/mnt/llmStorage203/Danny/oocyte'
-
 params = pd.read_excel(os.path.join(datapath, '_params.xlsx'))
 expts = sorted(list(set([expt[:-3] for expt in params['experiment']])))
 
 for expt in expts:
+    if expt == '171007_2':
+        continue
     print(expt)
     files = glob(os.path.join(datapath, expt + '*'))
     if len(files) is not 2:
