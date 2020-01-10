@@ -8,7 +8,7 @@ import pdb
 
 def entropy(data, sample_spacing, window='boxcar', nperseg=None,
             noverlap=None, nfft=None, detrend='constant', smooth_corr=True,
-            sigma=1, subtract_bias=True, many_traj=False, return_density=False,
+            sigma=1, subtract_bias=True, many_traj=False, return_epf=False,
             azimuthal_average=False):
     '''
     Calculate the entropy using the frequency space measure:
@@ -70,9 +70,9 @@ def entropy(data, sample_spacing, window='boxcar', nperseg=None,
     many_traj : bool, optional
         option to say whether input data has many trajectories. If so, each trajectory
         should be indexed by the first dimension of data
-    return_density : bool, optional
-        option to return entropy production rate and its density (i.e. the
-        quantity summed over to give the epr). Defaults to False
+    return_epf : bool, optional
+        option to return entropy production factor (i.e. the quantity summed
+        over to give the epr). Defaults to False
     azimuthal_average : bool, optional
         option to perform an azimuthal average over epr density before calculating
         epr. **Only works for 3D data (e.g. 2 spatial + 1 temporal dimension)**
@@ -81,11 +81,11 @@ def entropy(data, sample_spacing, window='boxcar', nperseg=None,
     -------
     s : float
         entropy production rate divided by system size
-    s_density : array (optional)
+    epf : array (optional)
         numpy array of entropy production rate density divided by system size.
-        Only returned if return_density=True
+        Only returned if return_epf=True
     freqs : list of arrays (optional)
-        frequency bins of s_density. Only returned if return_density=True
+        frequency bins of epf. Only returned if return_epf=True
     '''
 
     if not sample_spacing:
@@ -189,7 +189,7 @@ def entropy(data, sample_spacing, window='boxcar', nperseg=None,
         s -= bias
         # print(s)
 
-    if return_density:
+    if return_epf:
         return s.real, epf.real, freqs
     else:
         return s.real

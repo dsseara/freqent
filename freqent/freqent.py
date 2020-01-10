@@ -7,7 +7,7 @@ from scipy.ndimage import gaussian_filter
 
 def entropy(data, sample_spacing, window='boxcar', nperseg=None,
             noverlap=None, nfft=None, detrend='constant', padded=False,
-            smooth_corr=True, sigma=1, subtract_bias=True, return_density=False):
+            smooth_corr=True, sigma=1, subtract_bias=True, return_epf=False):
     '''
     Calculate the entropy using the frequency space measure:
 
@@ -65,9 +65,9 @@ def entropy(data, sample_spacing, window='boxcar', nperseg=None,
     subtract_bias : bool, optional
         option to subtract systematic bias from entropy estimate or not.
         Bias given by N(N-1) / (2 sqrt(pi)) * omega_max / (J * T_max * sigma)
-    return_density : bool, optional
-        option to return entropy production rate and its density (i.e. the
-        quantity summed over to give the epr). Defaults to False
+    return_epf : bool, optional
+        option to return entropy production factor (i.e. the quantity summed
+        over to give the epr). Defaults to False
 
     Returns
     -------
@@ -75,9 +75,9 @@ def entropy(data, sample_spacing, window='boxcar', nperseg=None,
         entropy production rate
     epf : numpy array (optional)
         numpy array containing entropy production rate density. epf.sum() = s.
-        Only returned if return_density=True
+        Only returned if return_epf=True
     freqs : numpy array (optional)
-        frequency bins of epf. Only returned if return_density=True
+        frequency bins of epf. Only returned if return_epf=True
     '''
 
     if data.ndim == 3:
@@ -138,7 +138,7 @@ def entropy(data, sample_spacing, window='boxcar', nperseg=None,
         # print(bias)
         s -= bias
 
-    if return_density:
+    if return_epf:
         return s.real, epf.real, omega
     else:
         return s.real
