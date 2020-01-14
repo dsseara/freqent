@@ -524,8 +524,9 @@ def _nd_window(data, window):
 
 def _nd_gauss_smooth(corr, stddev=1, mode='reflect'):
     '''
-    Helper function that smooths a correlation matrix along its time axis with a Gaussian.
-    To be used on the correlation functions out of corr_matrix.
+    Helper function that smooths a correlation matrix along its time and space
+    axes with a multivariate Gaussian. To be used on the correlation functions
+    out of corr_matrix.
 
     Parameters
     ----------
