@@ -63,6 +63,9 @@ def piv_stack(file):
                                            window_size=args.winsize,
                                            overlap=args.overlap)
 
+            if np.isnan(uv_array).any():
+                print('{file} {protein} has nans'.format(f=file.split(os.path.sep)[-1], protein=proteins[protein_ind]))
+
             piv_group.create_group(proteins[protein_ind])
             piv_group[proteins[protein_ind]].create_dataset('u', data=uv_array[..., 0])
             piv_group[proteins[protein_ind]]['u'].attrs['description'] = 'x velocity components over time'
