@@ -64,7 +64,7 @@ def piv_stack(file):
                                            overlap=args.overlap)
 
             if np.isnan(uv_array).any():
-                print('{file} {protein} has nans'.format(f=file.split(os.path.sep)[-1], protein=proteins[protein_ind]))
+                print('{file} {protein} has nans'.format(file=file.split(os.path.sep)[-1], protein=proteins[protein_ind]))
 
             piv_group.create_group(proteins[protein_ind])
             piv_group[proteins[protein_ind]].create_dataset('u', data=uv_array[..., 0])
