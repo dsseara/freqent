@@ -12,6 +12,8 @@ parser.add_argument('--datapath', '-d', type=str,
                     help='path to oocyte image files')
 parser.add_argument('--savepath', '-s', type=str, default=None,
                     help='path to output hdf5 files')
+parser.add_argument('--exptID', '-id', type=str, default=None,
+                    help='If only want specific experiment, put its ID (i.e. 140706_08)')
 
 args = parser.parse_args()
 
@@ -22,7 +24,11 @@ else:
     savepath = args.savepath
 
 params = pd.read_excel(os.path.join(datapath, '_params.xlsx'))
-expts = sorted(list(set([expt[:-3] for expt in params['experiment']])))
+if args.exptID is None:
+    # get all available experiments
+    expts = sorted(list(set([expt[:3] for expt in params['experiment']])))
+else:
+    expts = [args.exptID]
 
 for expt in expts:
     if expt == '171007_2':
