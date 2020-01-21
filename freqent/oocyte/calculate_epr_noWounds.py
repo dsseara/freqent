@@ -49,7 +49,7 @@ def calc_epr_spectral(file):
                                 sigma=sigma,
                                 subtract_bias=True,
                                 many_traj=False,
-                                return_density=True)
+                                return_epf=True)
 
         dw, dkx, dky = [np.diff(k)[0] for k in w]
 
