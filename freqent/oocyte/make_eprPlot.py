@@ -8,6 +8,7 @@ from datetime import datetime
 from glob import glob
 import pandas as pd
 import argparse
+import seaborn as sns
 
 plt.close('all')
 mpl.rcParams['pdf.fonttype'] = 42
@@ -33,6 +34,7 @@ if args.savepath is None:
     savepath = datapath
 else:
     savepath = args.savepath
+today = datetime.now().strftime('%y%m%d')
 
 files = glob(os.path.join(datapath, '*.hdf5'))
 epr = []
@@ -48,31 +50,19 @@ for file in files:
                 excitability.append(0)
             elif d['images']['actin'].attrs['excitability'] == 'Ect2':
                 excitability.append(1)
+            window = d['entropy'].attrs['window']
+            sigma = d['entropy'].attrs['sigma']
         else:
             pass
 
 epr_df = pd.DataFrame({'epr': epr, 'excitability': excitability, 'file': f})
 
-# with h5py.File(args.file, 'r') as d:
-#     epf_aziavg = d['entropy']['epf_azi_avg'][:]
-#     kr = d['entropy']['k_r'][:]
-#     w = d['entropy']['omega'][:]
+fig, ax = plt.subplots(figsize=(5, 5))
 
-# fig, ax = plt.subplots()
-# # ax.pcolormesh(kr, w[w > 0], (epf_aziavg / epf_aziavg.sum(axis=0))[w > 0],
-# #               rasterized=True, norm=mpl.colors.LogNorm())
-# a = ax.pcolormesh(kr, w[w > 0], epf_aziavg[w > 0],
-#                   rasterized=True, norm=mpl.colors.LogNorm(), cmap='magma')
-# ax.set(xlabel=r'$q_r \ [2 \pi / \mu m]$', ylabel=r'$\omega \ [2 \pi / s]$',
-#        title=file)
+sns.swarmplot(x='excitability', y='epr', data=epr_df, color='k', size=10, ax=ax)
+ax.set(xlabel='excitability', ylabel=r'$ds/dt$', xticklabels=['ctrl', 'Ect2'])
+sns.despine(offset={'left': -30}, trim=True)
+plt.tight_layout()
 
-# cbar = fig.colorbar(a, ax=ax)
-# cbar.ax.set(title=r'$\mathcal{E}$')
-# ax.set_aspect(np.diff(ax.get_xlim())[0] / np.diff(ax.get_ylim())[0])
-# plt.tight_layout()
-
-# if args.savepath is not None:
-
-#     fig.savefig(os.path.join(args.savepath, datetime.now().strftime('%y%m%d') + '_' + file + '_epf.pdf'), format='pdf')
-
-# plt.show()
+fig.savefig(os.path.join(savepath, today + '_epr_{window}_sigma{}-{}-{}.pdf'.format(window=window, *sigma)))
+plt.show()
