@@ -46,6 +46,7 @@ def piv_stack(file):
                                                                    dt=dt,
                                                                    search_area_size=args.searchsize,
                                                                    sig2noise_method='peak2peak')
+                print('SNR: max {max:0.3f}, min {min:0.3f}, mean {mean:0.3f}, median {median:0.3f}'.format(max=sig2noise.max(), min=sig2noise.min(), mean=sig2noise.mean(), median=np.median(sig2noise)))
                 # get rid of all vectors with low signal to noise ratio
                 u1, v1, mask = validation.sig2noise_val(u, v, sig2noise,
                                                         threshold=args.threshold)
