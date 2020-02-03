@@ -44,7 +44,7 @@ def divcurltheta(u, v, dx):
 
     div = dudx + dvdy
     curl = dvdx - dudy
-    theta = np.arctan2(np.flip(u, axis=0), np.flip(v, axis=0))
+    theta = np.arctan2(np.flip(v, axis=0), np.flip(u, axis=0))
     return div, curl, theta
 
 
