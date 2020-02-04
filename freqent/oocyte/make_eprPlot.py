@@ -23,7 +23,7 @@ mpl.rcParams['ytick.direction'] = 'in'
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--datapath', '-d', type=str,
-                    help='path to oocyte image files')
+                    help='parent directory of oocyte hdf5 files')
 parser.add_argument('--savepath', '-s', type=str, default=None,
                     help='path to output hdf5 files')
 
