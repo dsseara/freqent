@@ -18,7 +18,7 @@ def calc_epr_spectral(file):
         dt = d['images']['actin'].attrs['dt']
         dx = d['images']['actin'].attrs['dx']
 
-        traj = np.stack([d['images']['actin'][:-1], d['images']['rho'][:-1]])
+        traj = np.stack([d['images']['actin'][start_frame:end_frame], d['images']['rho'][start_frame:end_frame]])
 
         # calculate dynamic structure factor and it's azimuthal average
         c, w = fen.corr_matrix(traj, sample_spacing=[dt, dx, dx],
@@ -63,9 +63,10 @@ def calc_epr_spectral(file):
         if '/entropy' in d:
             del d['entropy']
         entropy_group = d.create_group('entropy')
-        entropy_group.attrs['sigma'] = sigma
         entropy_group.attrs['description'] = 'entropy calculations for images'
+        entropy_group.attrs['sigma'] = sigma
         entropy_group.attrs['window'] = window
+        entropy_group.attrs['frames'] = [start_frame, end_frame]
         entropy_group.create_dataset('s', data=s)
         entropy_group.create_dataset('epf', data=epf)
         entropy_group.create_dataset('epf_azi_avg', data=epf_azi_avg)
@@ -78,31 +79,48 @@ def calc_epr_spectral(file):
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--datapath', '-d', type=str,
-                    help='full path to data')
+parser.add_argument('datapath', type=str, nargs='*',
+                    help='full path to data to calculate epr')
+parser.add_argument('--frames', '-f', type=int, nargs=2, default=[0, -1],
+                    help='beginning and end frames to analyze, 0 indexed')
+parser.add_argument('--sigma', '-s', type=float, nargs=3, default=[1, 1, 1],
+                    help='smoothing width of Gaussian in t, x, y direction')
+parser.add_argument('--window', '-w', type=str, default='boxcar',
+                    help='window function to apply to data when finding cross-spectral density')
 args = parser.parse_args()
-datapath = args.datapath
+files = list(args.datapath)
+start_frame, end_frame = args.frames
+sigma = args.sigma
+window = args.window
+
+print('Calculating eprs...')
+if len(files) > 1:
+    with multiprocessing.Pool(processes=2) as pool:
+        result = pool.map(calc_epr_spectral, files)
+else:
+    s, epf, w = calc_epr_spectral(files)
+print('Done.')
 
 # these are the list of experiments that don't have any underlying problems
 # in the images
-expts = ['140706_08',
-         '140706_09',
-         '140713_08',
-         '140713_09',
-         '140717_01',
-         '140717_13',
-         '140817_05',
-         '160403_09',
-         '160403_14',
-         '160915_09',
-         '161001_04',
-         '161025_01',
-         '171230_04']
-files = [os.path.join(datapath, expt + '.hdf5') for expt in expts]
-sigma = [0.01, 0.1, 0.1]
-window = 'hann'
+# expts = ['140706_08',
+#          '140706_09',
+#          '140713_08',
+#          '140713_09',
+#          '140717_01',
+#          '140717_13',
+#          '140817_05',
+#          '160403_09',
+#          '160403_14',
+#          '160915_09',
+#          '161001_04',
+#          '161025_01',
+#          '171230_04']
+# files = [os.path.join(datapath, expt + '.hdf5') for expt in expts]
+# sigma = [0.01, 0.1, 0.1]
+# window = 'hann'
 
-print('Calculating eprs...')
-with multiprocessing.Pool(processes=2) as pool:
-    result = pool.map(calc_epr_spectral, files)
-print('Done.')
+# print('Calculating eprs...')
+# with multiprocessing.Pool(processes=2) as pool:
+#     result = pool.map(calc_epr_spectral, files)
+# print('Done.')
