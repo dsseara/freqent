@@ -1,3 +1,8 @@
+import h5py
+import numpy as np
+import matplotlib.pyplot as plt
+import os
+
 files = ['/mnt/llmStorage203/Danny/oocyte/140706_08.hdf5',
          '/mnt/llmStorage203/Danny/oocyte/140706_09.hdf5',
          '/mnt/llmStorage203/Danny/oocyte/140713_08.hdf5',
@@ -6,7 +11,7 @@ files = ['/mnt/llmStorage203/Danny/oocyte/140706_08.hdf5',
          '/mnt/llmStorage203/Danny/oocyte/140817_05.hdf5',
          '/mnt/llmStorage203/Danny/oocyte/160403_09.hdf5',
          '/mnt/llmStorage203/Danny/oocyte/160403_14.hdf5',
-         '/mnt/llmStorage203/Danny/oocyte/160915_09.hdf5',
+         '/mnt/llmStorage203/Danny/oocyte/160915_09.hdf5git',
          '/mnt/llmStorage203/Danny/oocyte/161001_04.hdf5',
          '/mnt/llmStorage203/Danny/oocyte/161025_01.hdf5',
          '/mnt/llmStorage203/Danny/oocyte/171230_04.hdf5']
