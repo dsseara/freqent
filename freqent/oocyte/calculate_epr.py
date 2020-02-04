@@ -100,27 +100,3 @@ if len(files) > 1:
 else:
     s, epf, w = calc_epr_spectral(files[0])
 print('Done.')
-
-# these are the list of experiments that don't have any underlying problems
-# in the images
-# expts = ['140706_08',
-#          '140706_09',
-#          '140713_08',
-#          '140713_09',
-#          '140717_01',
-#          '140717_13',
-#          '140817_05',
-#          '160403_09',
-#          '160403_14',
-#          '160915_09',
-#          '161001_04',
-#          '161025_01',
-#          '171230_04']
-# files = [os.path.join(datapath, expt + '.hdf5') for expt in expts]
-# sigma = [0.01, 0.1, 0.1]
-# window = 'hann'
-
-# print('Calculating eprs...')
-# with multiprocessing.Pool(processes=2) as pool:
-#     result = pool.map(calc_epr_spectral, files)
-# print('Done.')
