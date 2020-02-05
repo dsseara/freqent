@@ -64,5 +64,6 @@ ax.set(xlabel='excitability', ylabel=r'$ds/dt$', xticklabels=['ctrl', 'Ect2'])
 sns.despine(offset={'left': -30}, trim=True)
 plt.tight_layout()
 
-fig.savefig(os.path.join(savepath, today + '_epr_{window}_sigma{}-{}-{}.pdf'.format(window=window, *sigma)))
+if args.savepath is not None:
+    fig.savefig(os.path.join(savepath, today + '_epr_{window}_sigma{}-{}-{}.pdf'.format(window=window, *sigma)))
 plt.show()

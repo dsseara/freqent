@@ -5,6 +5,7 @@ import matplotlib as mpl
 import os
 import argparse
 import scipy.stats as stats
+from datetime import datetime
 
 
 plt.close('all')
@@ -33,6 +34,8 @@ parser.add_argument('datapath', type=str, nargs='*',
                     help='full path to datafiles')
 parser.add_argument('-savepath', '-s', type=str, default=None,
                     help='full path to save location of plots')
+parser.add_argument('--protein', '-p', type=str, default='actin',
+                    help='protein name of PIV to use')
 args = parser.parse_args()
 
 
@@ -53,12 +56,12 @@ args = parser.parse_args()
 
 alpha = np.zeros(len(args.datapath))
 for fInd, file in enumerate(args.datapath):
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=(5.5, 5))
     with h5py.File(file) as d:
-        dt = d['images']['actin'].attrs['dt']
-        nframes, nvecy, nvecx = d['piv']['actin']['theta'][:, :24, :24].shape
+        dt = d['images'][args.protein].attrs['dt']
+        nframes, nvecy, nvecx = d['piv'][args.protein]['theta'][:].shape
         msd = np.zeros((nvecy * nvecx, nframes - 1))
-        for ind, t in enumerate(np.reshape(d['piv']['actin']['theta'][:, :24, :24], (nframes, nvecy * nvecx)).T):
+        for ind, t in enumerate(np.reshape(d['piv'][args.protein]['theta'][:], (nframes, nvecy * nvecx)).T):
             msd[ind], tau = mean_square_disp(np.unwrap(t), dt)
 
     alpha[fInd], b, r, p, sigma = stats.linregress(np.log10(tau), np.log10(msd.mean(axis=0)))
@@ -67,8 +70,12 @@ for fInd, file in enumerate(args.datapath):
     ax.set(xlabel=r'$\tau$',
            ylabel=r'$\langle \vert \theta(t + \tau) - \theta(t) \vert^2 \rangle_t$',
            title=file.split(os.path.sep)[-1].split('.')[0])
-    ax.legend()
+    ax.legend(loc='lower right')
     plt.tight_layout()
+    if args.savepath is not None:
+        today = datetime.now().strftime('%y%m%d')
+        f = file.split(os.path.sep)[-1].split('.')[0]
+        fig.savefig(os.path.join(args.savepath, today + '_' + f + '_' + args.protein + '_thetaMSD.pdf'), format='pdf')
 
 
 plt.show()
