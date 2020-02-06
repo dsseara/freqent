@@ -36,32 +36,18 @@ parser.add_argument('-savepath', '-s', type=str, default=None,
                     help='full path to save location of plots')
 parser.add_argument('--protein', '-p', type=str, default='actin',
                     help='protein name of PIV to use')
+parser.add_argument('--frames', '-f', type=int, nargs=2, default=[0, -1],
+                    help='beginning and end frames to analyze, 0 indexed')
 args = parser.parse_args()
-
-
-# files = ['/mnt/llmStorage203/Danny/oocyte/140706_08.hdf5',
-#          '/mnt/llmStorage203/Danny/oocyte/140706_09.hdf5',
-#          '/mnt/llmStorage203/Danny/oocyte/140713_08.hdf5',
-#          '/mnt/llmStorage203/Danny/oocyte/140717_01.hdf5',
-#          '/mnt/llmStorage203/Danny/oocyte/140717_13.hdf5',
-#          '/mnt/llmStorage203/Danny/oocyte/140817_05.hdf5',
-#          '/mnt/llmStorage203/Danny/oocyte/160403_09.hdf5',
-#          '/mnt/llmStorage203/Danny/oocyte/160403_14.hdf5',
-#          '/mnt/llmStorage203/Danny/oocyte/160915_09.hdf5',
-#          '/mnt/llmStorage203/Danny/oocyte/161001_04.hdf5',
-#          '/mnt/llmStorage203/Danny/oocyte/161025_01.hdf5',
-#          '/mnt/llmStorage203/Danny/oocyte/171230_04.hdf5']
-
-# files = ['/mnt/llmStorage203/Danny/oocyte/160403_14.hdf5']
 
 alpha = np.zeros(len(args.datapath))
 for fInd, file in enumerate(args.datapath):
     fig, ax = plt.subplots(figsize=(5.5, 5))
     with h5py.File(file) as d:
         dt = d['images'][args.protein].attrs['dt']
-        nframes, nvecy, nvecx = d['piv'][args.protein]['theta'][:].shape
+        nframes, nvecy, nvecx = d['piv'][args.protein]['theta'][args.frames[0]:args.frames[1]].shape
         msd = np.zeros((nvecy * nvecx, nframes - 1))
-        for ind, t in enumerate(np.reshape(d['piv'][args.protein]['theta'][:], (nframes, nvecy * nvecx)).T):
+        for ind, t in enumerate(np.reshape(d['piv'][args.protein]['theta'][args.frames[0]:args.frames[1]], (nframes, nvecy * nvecx)).T):
             msd[ind], tau = mean_square_disp(np.unwrap(t), dt)
 
     alpha[fInd], b, r, p, sigma = stats.linregress(np.log10(tau), np.log10(msd.mean(axis=0)))
