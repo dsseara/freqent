@@ -36,6 +36,7 @@ with h5py.File(args.datapath, 'r') as d:
 fig, ax = plt.subplots()
 ax.plot(r[:-1] * dx, gr.T, 'k', alpha=0.1, lw=0.5)
 ax.plot(r[:-1] * dx, gr.mean(axis=0), 'r', lw=2)
+# ax.plot(r[:-1] * dx, [1] * len(r[:-1]), 'w--', alpha=0.75)
 ax.set_aspect(np.diff(ax.set_xlim())[0] / np.diff(ax.set_ylim())[0])
 ax.set(xlabel=r'$r \ (\mu m)$', ylabel=r'$g(r)$')
 plt.tight_layout()
