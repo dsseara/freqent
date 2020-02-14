@@ -42,6 +42,8 @@ excitability = []
 f = []
 
 for file in files:
+    if file == '/mnt/llmStorage203/Danny/oocyte/160915_09.hdf5':
+        continue
     with h5py.File(file, 'r') as d:
         if '/entropy' in d:
             f.append(file.split(os.path.sep)[-1].split('.')[0])
@@ -65,5 +67,5 @@ sns.despine(offset={'left': -30}, trim=True)
 plt.tight_layout()
 
 if args.savepath is not None:
-    fig.savefig(os.path.join(savepath, today + '_epr_{window}_sigma{}-{}-{}.pdf'.format(window=window, *sigma)))
+    fig.savefig(os.path.join(savepath, today + '_epr_vs_ect2.pdf'.format(window=window, *sigma)))
 plt.show()
