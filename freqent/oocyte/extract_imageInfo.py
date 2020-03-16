@@ -4,37 +4,96 @@ import numpy as np
 import h5py
 import os
 from glob import glob
-import sys
 import argparse
+from scipy.ndimage import gaussian_filter
+
+
+def image_correction(img_raw, sigma=50):
+    '''
+    helper function to correct for bleaching and illumination gradients
+    in images
+
+    Parameters
+    ----------
+    img_raw : array-like
+        numpy array of image to be corrected
+    sigma : float (optional)
+        size of Gaussian to smooth with when getting the background
+        illumination. Defaults to 50
+
+    Results
+    -------
+    img_corrected : array-like
+        numpy array of corrected image
+
+    Example
+    -------
+    img_corrected = image_correction(img, sigma=35)
+    '''
+    img = np.array([im - im.mean() for im in img_raw])
+
+    img_sub = img - img.mean(axis=0)
+
+    img_filt = np.array([gaussian_filter(im, sigma=sigma) for im in img_raw]).mean(axis=0)
+    img_filt /= img_filt.max()
+
+    img_corrected = np.array([im / img_filt for im in img_sub])
+
+    return img_corrected
+
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--datapath', '-d', type=str,
+parser.add_argument('datapath', type=str, nargs='*',
                     help='path to oocyte image files')
 parser.add_argument('--savepath', '-s', type=str, default=None,
                     help='path to output hdf5 files')
-parser.add_argument('--exptID', '-id', type=str, default=None,
-                    help='If only want specific experiment, put its ID (i.e. 140706_08)')
+parser.add_argument('--parampath', '-p', type=str, default=None,
+                    help='path to file with image parameters')
+parser.add_argument('--sigma', '-s', type=float, default=50,
+                    help='width of Gaussian blur to use when finding illumination gradient')
+
 
 args = parser.parse_args()
 
-datapath = args.datapath
+
 if args.savepath is None:
-    savepath = datapath
+    raise ValueError('specify path to save hdf5 output files')
 else:
     savepath = args.savepath
 
-params = pd.read_excel(os.path.join(datapath, '_params.xlsx'))
-if args.exptID is None:
-    # get all available experiments
-    expts = sorted(list(set([expt[:3] for expt in params['experiment']])))
-else:
-    expts = [args.exptID]
+params = pd.read_excel(os.path.join(args.parampath, '_params.xlsx'))
+expts = np.unique([expt[:-3] for expt in params['experiment']])
+
+# if args.exptID is None:
+#     # get all available experiments
+#     expts = sorted(list(set([expt[:3] for expt in params['experiment']])))
+# else:
+#     expts = [args.exptID]
+
+for file in files:
+    # Find parameter index and file ID for the file
+    param_idx = params.loc[params['experiment'] == file.split(os.path.sep)[-1][:-4]].index[0]
+    exptID = expts[np.where([expt in files[0] for expt in expts])[0][0]]
+
+    with h5py.File(os.path.join(savepath, exptID + '.hdf5')) as f:
+        if '/images' not in f:
+            imgs_group = f.create_group('images')
+        else:
+            imgs_group = f['images']
+
+        im = pims.TiffStack(file)
+        im_array = np.asarray([img for img in im])
+
+        im_corrected = image_correction(im_array, sigma=args.sigma)
+
+
+
 
 for expt in expts:
     if expt == '171007_2':
         continue
     print(expt)
-    files = glob(os.path.join(datapath, expt + '*'))
+    files = glob(os.path.join(args.datapath, expt + '*'))
     if len(files) is not 2:
         Warning('Expecting 2 files, found {n}'.format(n=len(files)))
         continue
