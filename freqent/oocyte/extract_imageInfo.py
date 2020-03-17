@@ -93,10 +93,9 @@ for file in args.datapath:
         protein_name = params.loc[params['experiment'] == fname, 'protein'].iloc[0]
 
         # create dataset in images group with this information
-        if '/images/' + protein_name not in f:
-            img_dset = imgs_group.create_dataset(protein_name, data=im_corrected)
-        else:
-            f['images'][protein_name] = im_corrected
+        if '/images/' + protein_name in f:
+            del f['images'][protein_name]
+        img_dset = imgs_group.create_dataset(protein_name, data=im_corrected)
 
         # set attributes with metadata
         img_dset.attrs['path'] = file
