@@ -75,7 +75,16 @@ for file in args.datapath:
     param_idx = params.loc[params['experiment'] == file.split(os.path.sep)[-1][:-4]].index[0]
     exptID = expts[np.where([expt in file for expt in expts])[0][0]]
 
+    # get specific file name, i.e. expt_C1 or expt_C2
+    fname = file.split(os.path.sep)[-1].split('.')[0]
+
+    # get name of protein imaged in this file
+    protein_name = params.loc[params['experiment'] == fname, 'protein'].iloc[0]
+
+    print('Reading {file}'.format(file=fname))
     with h5py.File(os.path.join(savepath, exptID + '.hdf5')) as f:
+
+
         if '/images' not in f:
             imgs_group = f.create_group('images')
         else:
@@ -86,11 +95,7 @@ for file in args.datapath:
 
         im_corrected = image_correction(im_array, sigma=args.sigma)
 
-        # get specific file name, i.e. expt_C1 or expt_C2
-        fname = file.split(os.path.sep)[-1].split('.')[0]
 
-        # get name of protein imaged in this file
-        protein_name = params.loc[params['experiment'] == fname, 'protein'].iloc[0]
 
         # create dataset in images group with this information
         if '/images/' + protein_name in f:
