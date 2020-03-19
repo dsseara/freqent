@@ -311,7 +311,9 @@ def corr_matrix(data, sample_spacing=None, window='boxcar', nperseg=None,
 
     # preallocate correlation matrix
     if azimuthal_average:
-        c = np.zeros((*nfft[:-2], nfft[-1] // 2, nvar, nvar), dtype=complex)
+        # find the minimum spatial distance
+        short_dim = min(nfft[-2:])
+        c = np.zeros((*nfft[:-2], short_dim // 2, nvar, nvar), dtype=complex)
     else:
         c = np.zeros((*nfft, nvar, nvar), dtype=complex)
 
