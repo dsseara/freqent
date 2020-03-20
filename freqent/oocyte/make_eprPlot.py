@@ -48,10 +48,15 @@ for file in files:
         if '/entropy' in d:
             f.append(file.split(os.path.sep)[-1].split('.')[0])
             epr.append(d['entropy']['s'][()])
+
+            # first two conditions work for bement data. last condition works with michaud data
             if d['images']['actin'].attrs['excitability'] == 'ctrl':
                 excitability.append(0)
             elif d['images']['actin'].attrs['excitability'] == 'Ect2':
                 excitability.append(1)
+            else:
+                excitability.append(d['images']['actin'].attrs['excitability'])
+
             window = d['entropy'].attrs['window']
             sigma = d['entropy'].attrs['sigma']
         else:
@@ -62,8 +67,8 @@ epr_df = pd.DataFrame({'epr': epr, 'excitability': excitability, 'file': f})
 fig, ax = plt.subplots(figsize=(5, 5))
 
 sns.swarmplot(x='excitability', y='epr', data=epr_df, color='k', size=10, ax=ax)
-ax.set(xlabel='excitability', ylabel=r'$ds/dt$', xticklabels=['ctrl', 'Ect2'])
-sns.despine(offset={'left': -30}, trim=True)
+# ax.set(xlabel='excitability', ylabel=r'$ds/dt$', xticklabels=['ctrl', 'Ect2'])
+# sns.despine(offset={'left': -30}, trim=True)
 plt.tight_layout()
 
 if args.savepath is not None:
