@@ -50,6 +50,7 @@ def expDecay(t, A, tau, k):
 
 tau = np.zeros(len(args.datapath))
 for fInd, file in enumerate(args.datapath):
+    print(file.split(os.path.sep)[-1])
     fig, ax = plt.subplots()
     with h5py.File(file) as d:
         dt = d['images']['actin'].attrs['dt']
@@ -81,7 +82,7 @@ for fInd, file in enumerate(args.datapath):
     else:
         raise ValueError('Unrecognized fit function. Either dampedOscillator or expDecay.')
 
-    if args.hdf5:
+    if args.save:
         for fInd, file in enumerate(args.datapath):
             with h5py.File(file) as d:
                 if '/xcorr' in d:
