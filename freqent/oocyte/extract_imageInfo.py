@@ -30,13 +30,18 @@ def image_correction(img_raw, sigma=50):
     -------
     img_corrected = image_correction(img, sigma=35)
     '''
+
+    # bleach correct
     img = np.array([im - im.mean() for im in img_raw])
 
+    # subtract away static features that are preserved over time, e.g. dust
     img_sub = img - img.mean(axis=0)
 
+    # get illumination profile and normalize it
     img_filt = np.array([gaussian_filter(im, sigma=sigma) for im in img_raw]).mean(axis=0)
     img_filt /= img_filt.max()
 
+    # divide each frame by the illumination profile
     img_corrected = np.array([im / img_filt for im in img_sub])
 
     return img_corrected
