@@ -50,6 +50,11 @@ def expDecay(t, A, tau, k):
 
 tau = np.zeros(len(args.datapath))
 for fInd, file in enumerate(args.datapath):
+<<<<<<< HEAD
+=======
+    print(file.split(os.path.sep)[-1])
+    fig, ax = plt.subplots()
+>>>>>>> 3b52b1cda9d4598e215599cf5646c24ee76f27ab
     with h5py.File(file) as d:
         dt = d['images']['actin'].attrs['dt']
         nt, nx, ny = d['images']['actin'][args.frames[0]:args.frames[1]].shape
