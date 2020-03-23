@@ -50,7 +50,6 @@ def expDecay(t, A, tau, k):
 
 tau = np.zeros(len(args.datapath))
 for fInd, file in enumerate(args.datapath):
-    fig, ax = plt.subplots()
     with h5py.File(file) as d:
         dt = d['images']['actin'].attrs['dt']
         nt, nx, ny = d['images']['actin'][args.frames[0]:args.frames[1]].shape
@@ -81,38 +80,40 @@ for fInd, file in enumerate(args.datapath):
     else:
         raise ValueError('Unrecognized fit function. Either dampedOscillator or expDecay.')
 
-    if args.hdf5:
-        for fInd, file in enumerate(args.datapath):
-            with h5py.File(file) as d:
-                if '/xcorr' in d:
-                    del d['xcorr']
-                xcorr_group = d.create_group('xcorr')
+    if args.save:
+        with h5py.File(file) as d:
+            if '/xcorr' in d:
+                del d['xcorr']
+            xcorr_group = d.create_group('xcorr')
 
-                if args.fit == 'dampedOscillator':
-                    description = 'cross correlation between actin and rho, plus fit params to A exp(-t/tau) cos(omega t + phi) + k'
-                elif args.fit == 'expDecay':
-                    description = 'cross correlation between actin and rho, plus fit params to A exp(-t/tau) + k of peaks'
+            if args.fit == 'dampedOscillator':
+                fit = 'damped harmonic oscillator, A exp(-t/tau) cos(omega t + phi) + k'
+            elif args.fit == 'expDecay':
+                fit = 'exponential decay, A exp(-t/tau) + k'
 
-                xcorr_group.attrs['description'] = description
-                xcorr_group.create_dataset('xcorr_mean', data=xcorr)
-                xcorr_group.create_dataset('t', data=t)
+            description = 'cross correlation and between actin and rho, plus fit'
 
-                if args.fit == 'dampedOscillator':
-                    xcorr_group.create_dataset('A', data=popt[0])
-                    xcorr_group.create_dataset('A_std', data=np.sqrt(pcov[0, 0]))
-                    xcorr_group.create_dataset('tau', data=popt[1])
-                    xcorr_group.create_dataset('tau_std', data=np.sqrt(pcov[1, 1]))
-                    xcorr_group.create_dataset('omega', data=popt[2])
-                    xcorr_group.create_dataset('omega_std', data=np.sqrt(pcov[2, 2]))
-                    xcorr_group.create_dataset('phi', data=popt[3])
-                    xcorr_group.create_dataset('phi_std', data=np.sqrt(pcov[3, 3]))
-                    xcorr_group.create_dataset('k', data=popt[4])
-                    xcorr_group.create_dataset('k_std', data=np.sqrt(pcov[4, 4]))
-                elif args.fit == 'expDecay':
-                    xcorr_group.create_dataset('A', data=popt[0])
-                    xcorr_group.create_dataset('A_std', data=np.sqrt(pcov[0, 0]))
-                    xcorr_group.create_dataset('tau', data=popt[1])
-                    xcorr_group.create_dataset('tau_std', data=np.sqrt(pcov[1, 1]))
-                    xcorr_group.create_dataset('k', data=popt[2])
-                    xcorr_group.create_dataset('k_std', data=np.sqrt(pcov[2, 2]))
-                    xcorr_group.create_dataset('omega', data=(2 * np.pi / np.diff(t_interp[peak_inds])).mean())
+            xcorr_group.attrs['description'] = description
+            xcorr_group.attrs['fit'] = fit
+            xcorr_group.create_dataset('xcorr_mean', data=xcorr)
+            xcorr_group.create_dataset('t', data=t)
+
+            if args.fit == 'dampedOscillator':
+                xcorr_group.create_dataset('A', data=popt[0])
+                xcorr_group.create_dataset('A_std', data=np.sqrt(pcov[0, 0]))
+                xcorr_group.create_dataset('tau', data=popt[1])
+                xcorr_group.create_dataset('tau_std', data=np.sqrt(pcov[1, 1]))
+                xcorr_group.create_dataset('omega', data=popt[2])
+                xcorr_group.create_dataset('omega_std', data=np.sqrt(pcov[2, 2]))
+                xcorr_group.create_dataset('phi', data=popt[3])
+                xcorr_group.create_dataset('phi_std', data=np.sqrt(pcov[3, 3]))
+                xcorr_group.create_dataset('k', data=popt[4])
+                xcorr_group.create_dataset('k_std', data=np.sqrt(pcov[4, 4]))
+            elif args.fit == 'expDecay':
+                xcorr_group.create_dataset('A', data=popt[0])
+                xcorr_group.create_dataset('A_std', data=np.sqrt(pcov[0, 0]))
+                xcorr_group.create_dataset('tau', data=popt[1])
+                xcorr_group.create_dataset('tau_std', data=np.sqrt(pcov[1, 1]))
+                xcorr_group.create_dataset('k', data=popt[2])
+                xcorr_group.create_dataset('k_std', data=np.sqrt(pcov[2, 2]))
+                xcorr_group.create_dataset('omega', data=(2 * np.pi / np.diff(t_interp[peak_inds])).mean())
