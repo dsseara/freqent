@@ -50,11 +50,7 @@ def expDecay(t, A, tau, k):
 
 tau = np.zeros(len(args.datapath))
 for fInd, file in enumerate(args.datapath):
-<<<<<<< HEAD
-=======
     print(file.split(os.path.sep)[-1])
-    fig, ax = plt.subplots()
->>>>>>> 3b52b1cda9d4598e215599cf5646c24ee76f27ab
     with h5py.File(file) as d:
         dt = d['images']['actin'].attrs['dt']
         nt, nx, ny = d['images']['actin'][args.frames[0]:args.frames[1]].shape
@@ -78,10 +74,16 @@ for fInd, file in enumerate(args.datapath):
         xcorr_interp = interpolate.interp1d(t[t >= 0], xcorr.mean(axis=1)[t >= 0], kind='cubic')
         t_interp = np.linspace(0, t.max(), 10001)
         peak_inds = signal.find_peaks(xcorr_interp(t_interp))[0]
-        popt, pcov = optimize.curve_fit(expDecay,
-                                        t_interp[peak_inds],
-                                        xcorr_interp(t_interp[peak_inds]),
-                                        p0=[1e7, 100, -1e5], method='dogbox')
+        if len(peak_inds) > 0:
+            popt, pcov = optimize.curve_fit(expDecay,
+                                            t_interp[peak_inds],
+                                            xcorr_interp(t_interp[peak_inds]),
+                                            p0=[1e7, 100, -1e5], method='dogbox')
+        else:
+            # sometimes the signal doesn't oscillate at all, so exponential decay
+            # of cross-correlation can't be done
+            popt = [np.nan, np.nan, np.nan]
+            pcov = np.eye(3) * np.nan
     else:
         raise ValueError('Unrecognized fit function. Either dampedOscillator or expDecay.')
 
