@@ -596,9 +596,6 @@ def _azimuthal_average(data, sample_spacing=[1, 1], center=None,
         want to exclude data, "circle", which only includes data in the
         largest inscribable circle within the data, or None, which uses no mask.
         Defaults to None
-    dx : float, optional
-        Sampling spacing in data. To be used when returning radial coordinate.
-        Defaults to 1.0
 
     Returns
     -------
@@ -654,8 +651,7 @@ def _azimuthal_average(data, sample_spacing=[1, 1], center=None,
 
 
 def _azimuthal_average_3D(data, sample_spacing=[1, 1, 1], tdim=0,
-                          center=None, binsize=1, mask=None, weight=None,
-                          dx=1):
+                          center=None, binsize=1, mask=None, weight=None):
     """
     Takes 3D data and gets radial component of two dimensions
 
