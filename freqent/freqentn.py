@@ -313,7 +313,7 @@ def corr_matrix(data, sample_spacing=None, window='boxcar', nperseg=None,
     if azimuthal_average:
         # find the minimum spatial distance
         short_dim = min(nfft[-2:])
-        c = np.zeros((*nfft[:-2], short_dim // 2, nvar, nvar), dtype=complex)
+        c = np.zeros((*nfft[:-2], short_dim // 2 - 1, nvar, nvar), dtype=complex)
     else:
         c = np.zeros((*nfft, nvar, nvar), dtype=complex)
 
@@ -612,7 +612,7 @@ def _azimuthal_average(data, sample_spacing=[1, 1], center=None,
     sample_spacing = np.asarray(sample_spacing)
 
     # Get all the physical positions of each array element in x and y direction
-    [y, x] = [d * inds for d, inds in zip(np.indices(data.shape), sample_spacing)]
+    [y, x] = [d * inds for inds, d in zip(np.indices(data.shape), sample_spacing)]
 
     # Define the center from which to measure the radius
     if not center:
@@ -634,7 +634,7 @@ def _azimuthal_average(data, sample_spacing=[1, 1], center=None,
         weight = np.ones(data.shape)
 
     # Get the bins according to binsize
-    nbins = int(np.round((r * mask).max()) / binsize) + 1
+    nbins = int(np.round((r * mask).max() / binsize)) + 1
     maxbin = nbins * binsize
     binEdges = np.linspace(0, maxbin, nbins + 1)
 
