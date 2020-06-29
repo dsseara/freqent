@@ -647,7 +647,7 @@ def _azimuthal_average(data, sample_spacing=[1, 1], center=None,
     radialProfile = (np.histogram(r, binEdges,
                                   weights=data * mask * weight)[0][:-1] / nBinnedData)
 
-    return radialProfile, binCenters[:-1] * binsize
+    return radialProfile, binCenters[:-1]
 
 
 def _azimuthal_average_3D(data, sample_spacing=[1, 1, 1], tdim=0,
