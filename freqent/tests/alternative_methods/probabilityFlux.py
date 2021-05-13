@@ -1,4 +1,5 @@
 import numpy as np
+from tqdm import tqdm
 import pdb
 
 
@@ -45,12 +46,12 @@ def probabilityFlux(data, dt=1, bins=10):
     if ndim != 2:
         raise ValueError('This function only works for 2D data')
 
-    prob_map, edges = np.histogramdd(data, bins=bins)
+    prob_map, edges = np.histogramdd(data, bins=bins, density=True)
     nbins = [len(e) - 1 for e in edges]
 
     flux_field = np.zeros((ndim, *nbins))
 
-    for tInd, (prior_state, current_state, next_state) in enumerate(zip(data[:-2], data[1:-1], data[2:])):
+    for tInd, (prior_state, current_state, next_state) in enumerate(zip(tqdm(data[:-2]), data[1:-1], data[2:])):
         # print('\r tInd={tInd}'.format(tInd=tInd))
         prior_bin_index = np.array([[np.digitize(s, e) - 1 for s, e in zip(prior_state, edges)]])
         current_bin_index = np.array([[np.digitize(s, e) - 1 for s, e in zip(current_state, edges)]])
@@ -84,7 +85,7 @@ def probabilityFlux(data, dt=1, bins=10):
             # add 1 flux vector to each state the path enters
             # flux_field[:, in_ind[0], in_ind[1]] += flux_vecs[ind]
 
-    # flux_field /= T
+    flux_field /= T
 
     return prob_map, flux_field, edges
 
