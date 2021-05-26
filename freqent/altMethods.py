@@ -4,12 +4,12 @@ import pandas as pd
 import pdb
 
 
-def spatialEPR(data, dt=1, bins=10):
+def spatialEPR(data, dt=1, bins=10, D=1, verbose=True):
     '''
     Compute the entropy production rate from data
     using the spatial integral of the probability flux
 
-    ds/dt = ∫ j(x)^2 / (D * p(x)) dx
+    ds/dt = ∫ j(x)^2 / (D * p(x)) dx = <v^2> / D
 
     Parameters
     ----------
@@ -24,7 +24,47 @@ def spatialEPR(data, dt=1, bins=10):
             - The number of bins for each dimension (nx, ny, … = bins)
             - The number of bins for all dimensions (nx = ny = … = bins).
         Defaults to 10
+    D : float
+        diffusion constant of the system. Defaults to 1
+    verbose : bool
+        If false, only return entropy production rate.
+        If true, also return probability field, velocity field, and bin edges
+
+    Results
+    -------
+    epr : float
+        value of entropy production rate
+    prob_map : array
+        histogram of probabilities for each state
+    velocity_field : array
+        vector field of velocities in shape D x [nbins]
+    edges : array
+        edges used to discretize space
+
+    To-do
+    -----
+    - create an estimator for D, rather than having the user input it
+    - allow input of more than one trajectory with which to create velocity field
     '''
+
+    data = np.asarray(data)
+    ndim, nt = data.shape
+
+    if ndim != 2:
+        raise ValueError('This function only works for 2D data')
+    if ndim > nt:
+        raise ValueError('Spatial dimension of input data should be indexed by first index')
+
+    prob_map, velocity_field, edges = probabilityFlux(data, dt=dt, bins=bins)
+
+    dx = np.array([np.diff(e)[0] for e in edges])
+
+    epr = np.sum(np.sum(velocity_field**2, axis=0) * prob_map) * np.prod(dx) / D
+
+    if verbose:
+        return epr, prob_map, velocity_field, edges
+    else:
+        return epr
 
 
 def probabilityFlux(data, dt=1, bins=10):
@@ -55,12 +95,6 @@ def probabilityFlux(data, dt=1, bins=10):
     edges : array
         edges used to discretize space
 
-    See also
-    --------
-
-    Example
-    -------
-
     '''
 
     data = np.asarray(data)
@@ -70,13 +104,14 @@ def probabilityFlux(data, dt=1, bins=10):
     if ndim != 2:
         raise ValueError('This function only works for 2D data')
 
-    prob_map, edges = np.histogramdd(data, bins=bins, density=True)
+    prob_map, edges = np.histogramdd(data.T, bins=bins, density=True)
     nbins = [len(e) - 1 for e in edges]
 
     # calculate velocities
-    velocity = np.gradient(data, dt, axis=0)
+    velocity = np.gradient(data, dt, axis=1)
 
-    # use digitize over each dimension to find list of states
+    # use digitize over each dimension to find list of
+    # bin indices for each data position
     states = np.array([np.digitize(d, e) - 1 for d, e in zip(data, edges)])
 
     # preallocate velocity field
