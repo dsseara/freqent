@@ -68,9 +68,9 @@ figImag, axImag = plt.subplots(2, 2, sharex=True, sharey=True)
 
 for idx in idx_array:
     aziAvg_real, kr_real = fen._azimuthal_average_3D(c[..., idx[0], idx[1]].real,
-                                                     dx=2 * np.pi / xmax)
+                                                     sample_spacing=2 * np.pi / np.array([tmax, xmax, ymax]))
     aziAvg_imag, kr_imag = fen._azimuthal_average_3D(c[..., idx[0], idx[1]].imag,
-                                                     dx=2 * np.pi / xmax)
+                                                     sample_spacing=2 * np.pi / np.array([tmax, xmax, ymax]))
     axReal[idx[0], idx[1]].pcolormesh(kr_real, freqs[0], aziAvg_real, vmin=-1, vmax=15)
     axImag[idx[0], idx[1]].pcolormesh(kr_imag, freqs[0], aziAvg_imag, vmin=-0.3, vmax=0.3)
 
