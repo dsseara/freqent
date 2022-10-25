@@ -29,21 +29,21 @@ tArr = np.linspace(0, tmax, nt)
 tt, xx, yy = np.meshgrid(tArr, xArr, yArr, indexing='ij')
 
 # Spatial and temporal frequency (in radians/length or time)
-lambda0 = np.pi / 6
+lambda0 = np.pi
 k0 = 2 * np.pi / lambda0
 T0 = 5
 w0 = 2 * np.pi / T0
 
-lambda1 = np.pi / 6
+lambda1 = np.pi / 2
 k1 = 2 * np.pi / lambda1
 T1 = 5
 w1 = 2 * np.pi / T1
 
 # Center offset
-x0 = 0 * dx
-y0 = 0 * dy
-x1 = 0 * dx
-y1 = 0 * dy
+x0 = 100 * dx
+y0 = -72 * dy
+x1 = -10 * dx
+y1 = 20 * dy
 
 # phase difference
 phi = 1 * np.pi / 2
@@ -63,8 +63,12 @@ c = fen._nd_gauss_smooth(c, stddev=[1, 2, 2])
 
 idx_array = list(product(np.arange(2), repeat=2))
 
+figIm, axIm = plt.subplots(1, 2, sharex=True, sharey=True)
 figReal, axReal = plt.subplots(2, 2, sharex=True, sharey=True)
 figImag, axImag = plt.subplots(2, 2, sharex=True, sharey=True)
+
+axIm[0].pcolormesh(xx[10], yy[10], r0t[10], cmap='RdBu_r')
+axIm[1].pcolormesh(xx[10], yy[10], r1t[10], cmap='RdBu_r')
 
 for idx in idx_array:
     aziAvg_real, kr_real = fen._azimuthal_average_3D(c[..., idx[0], idx[1]].real,
